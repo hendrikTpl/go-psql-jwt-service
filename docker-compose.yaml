@@ -1,0 +1,73 @@
+version: "3.8"
+services:
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   image: backend-service
+  #   container_name: backend-service
+  #   restart: unless-stopped
+  #   networks:
+  #     - dxid-services-net
+  #   env_file: .env
+  #   ports:
+  #     - 5000:5000
+  #   depends_on:
+  #     - db
+  #     - redis
+
+  db:
+    image: postgres:17-alpine
+    container_name: db-service
+    restart: unless-stopped
+    networks:
+      - dxid-services-net
+    ports:
+      - "5432:5432"
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: $DB_USER
+      POSTGRES_PASSWORD: $DB_PASSWORD
+      POSTGRES_DB: $DB_NAME
+      PGDATA: /var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin-service
+    restart: unless-stopped
+    networks:
+      - dxid-services-net
+    environment:
+      PGADMIN_DEFAULT_EMAIL: $PG_USER_EMAIL
+      PGADMIN_DEFAULT_PASSWORD: $PG_PASSWORD
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    links:
+      - "db:pgsql-server"
+  
+  redis:
+    image: redis:latest
+    container_name: redis-service
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - dxid-services-net
+    ports:
+      - "6379:6379"
+    command: ["redis-server"]
+
+volumes:
+  db-data:
+  pgadmin-data:
+
+networks:
+  dxid-services-net:
+    name: dxid-services-net
