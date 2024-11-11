@@ -10,12 +10,12 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
+	"github.com/hendrikTpl/go-psql-jwt-service/backend/models"
+	"github.com/hendrikTpl/go-psql-jwt-service/backend/routes"
+	"github.com/hendrikTpl/go-psql-jwt-service/backend/services"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
-	"github.com/your-project/grpc-redis-postgres/backend/models"
-	"github.com/your-project/grpc-redis-postgres/backend/routes"
-	"github.com/your-project/grpc-redis-postgres/backend/services"
 )
 
 func main() {
