@@ -65,6 +65,6 @@ func main() {
 	routes.SetUpRoutes(router, userService, tokenService)
 
 	// Start the server
-	fmt.Printf("Server listening on port 8080\n")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	fmt.Printf("Server listening on port 5001\n")
+	log.Fatal(http.ListenAndServe(":5001", router))
 }

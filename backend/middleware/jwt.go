@@ -1,43 +1,36 @@
 package middleware
 
 import (
-	"context"
-	"net/http"
-	"strings"
+    "backend/config"
+    "net/http"
+    "strings"
 
-	"github.com/your-project/grpc-redis-postgres/backend/services"
+    "github.com/dgrijalva/jwt-go"
 )
 
-// JWTAuth middleware for JWT token authentication
-func JWTAuth(next http.Handler, tokenService services.TokenService) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extract the JWT token from the Authorization header
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Authorization header is missing", http.StatusUnauthorized)
-			return
-		}
+func JWTMiddleware(secret string, next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        tokenHeader := r.Header.Get("Authorization")
+        if tokenHeader == "" {
+            http.Error(w, "Missing token", http.StatusUnauthorized)
+            return
+        }
 
-		// Split the header value into "Bearer " and the token
-		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			http.Error(w, "Invalid authorization header format", http.StatusUnauthorized)
-			return
-		}
+        tokenParts := strings.Split(tokenHeader, " ")
+        if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+            http.Error(w, "Invalid token format", http.StatusUnauthorized)
+            return
+        }
 
-		// Verify the JWT token
-		tokenString := tokenParts[1]
-		userId, err := tokenService.VerifyToken(tokenString)
-		if err != nil {
-			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-			return
-		}
+        token, err := jwt.Parse(tokenParts[1], func(t *jwt.Token) (interface{}, error) {
+            return []byte(secret), nil
+        })
 
-		// Store the user ID in the request context
-		ctx := context.WithValue(r.Context(), "userId", userId)
-		r = r.WithContext(ctx)
+        if err != nil || !token.Valid {
+            http.Error(w, "Invalid token", http.StatusUnauthorized)
+            return
+        }
 
-		// Proceed to the next handler
-		next.ServeHTTP(w, r)
-	})
+        next.ServeHTTP(w, r)
+    })
 }
